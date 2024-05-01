@@ -67,10 +67,16 @@
       <HintPath>$(SolutionDir)dependencies\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(Solutiondir)dependencies\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(SolutionDir)dependencies\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(Solutiondir)dependencies\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(SolutionDir)dependencies\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="DOTween">
+      <HintPath>$(SolutionDir)dependencies\DOTween.dll</HintPath>
+    </Reference>
+    <Reference Include="DOTween.Modules">
+      <HintPath>$(SolutionDir)dependencies\DOTween.Modules.dll</HintPath>
     </Reference>
   </ItemGroup>
 

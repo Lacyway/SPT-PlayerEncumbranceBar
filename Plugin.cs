@@ -1,13 +1,11 @@
-﻿using Aki.Reflection.Utils;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using DrakiaXYZ.VersionChecker;
-using EFT.InventoryLogic;
-using EFT.UI;
 using WeightBar.Patches;
 using System;
 using System.IO;
 using System.Reflection;
+using EFT.UI.Health;
 
 namespace WeightBar
 {
@@ -20,6 +18,8 @@ namespace WeightBar
         public static ManualLogSource Log => Instance.Logger;
         public static string PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
+        public WeightBarComponent weightBarComponent;
+
         internal void Awake()
         {
             if (!VersionChecker.CheckEftVersion(Logger, Info, Config))
@@ -31,6 +31,17 @@ namespace WeightBar
             DontDestroyOnLoad(this);
 
             // patches
+            new HealthParametersShowPatch().Enable();
+        }
+
+        public void TryAttachToHealthParametersPanel(HealthParametersPanel inventoryScreen)
+        {
+            if (weightBarComponent != null)
+            {
+                return;
+            }
+
+            weightBarComponent = WeightBarComponent.AttachToHealthParametersPanel(inventoryScreen);
         }
     }
 }
