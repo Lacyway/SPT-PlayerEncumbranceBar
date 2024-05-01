@@ -52,6 +52,8 @@ namespace WeightBar
 
         public static WeightBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel)
         {
+            _healthParametersPanel = healthParametersPanel;
+
             // check if healthParametersPanel not yet setup all the way
             var weightPanel = _healthParametersPanelWeightField.GetValue(_healthParametersPanel) as HealthParameterPanel;
             if (!weightPanel)
@@ -59,8 +61,7 @@ namespace WeightBar
                 return null;
             }
 
-            // setup static variables for later
-            _healthParametersPanel = healthParametersPanel;
+            // setup walking drains color, just do halfway between the two other colors
             _walkingDrainsColor = Color.Lerp(_overweightColor, _completelyOverweightColor, 0.5f);
 
             // get text template
