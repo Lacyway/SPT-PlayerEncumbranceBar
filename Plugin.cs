@@ -27,6 +27,9 @@ namespace WeightBar
                 throw new Exception("Invalid EFT Version");
             }
 
+            Settings.Init(Config);
+            Config.SettingChanged += (_, _) => weightBarComponent.OnSettingChanged();
+
             Instance = this;
             DontDestroyOnLoad(this);
 

@@ -9,6 +9,7 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Health;
 using HarmonyLib;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using WeightBar.Utils;
@@ -18,15 +19,26 @@ namespace WeightBar
     public class WeightBarComponent : UIElement
     {
         private static string _progressTexturePath = Path.Combine(Plugin.PluginFolder, "progressBarFill.png"); // 1x9
-        private static FieldInfo _healthParametersPanelHealthController = AccessTools.Field(typeof(HealthParametersPanel), "ihealthController_0");
+        private static FieldInfo _healthParametersPanelHealthControllerField = AccessTools.Field(typeof(HealthParametersPanel), "ihealthController_0");
+        private static FieldInfo _healthParametersPanelWeightField = AccessTools.Field(typeof(HealthParametersPanel), "_weight");
+        private static FieldInfo _healthParameterPanelCurrentValueField = AccessTools.Field(typeof(HealthParameterPanel), "_currentValue");
 
         private static Inventory _inventory => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Inventory;
         private static SkillManager _skills => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Skills;
 
+        private static HealthParametersPanel _healthParametersPanel; // set by AttachToHealthParametersPanel
+        private static GameObject _textTemplate;
+        private static Color _unencumberedColor = new(0.6431f, 0.7725f, 0.6627f, 1f);
+        private static Color _overweightColor = new(0.9176f, 0.7098f, 0.1961f, 1f);
+        private static Color _completelyOverweightColor = new(0.7686f, 0f, 0f, 1f);
+        private static Color _walkingDrainsColor; // set by lerp
+        private static Vector2 _position = new(0, -25);
         private static Vector2 _barSize = new(550, 9);
         private static Vector2 _tickSize = new(1, 9);
-        private static Vector2 _position = new(0, -25);
-        private float _tweenLength = 0.25f; // seconds
+        private static Vector2 _textSize = new(40, 20);
+        private static float _textFontSize = 10;
+        private static Vector2 _textPosition = new(0, -11);
+        private static float _tweenLength = 0.25f; // seconds
 
         private IHealthController _healthController;
         private Image _progressImage;
@@ -35,13 +47,19 @@ namespace WeightBar
         private Vector2 _walkOverweightLimits;
         private Image _overweightTickMark;
         private Image _walkingDrainsTickMark;
-        private Color _unencumberedColor = new Color(0.6431f, 0.7725f, 0.6627f, 1f);
-        private Color _overweightColor = new Color(0.9176f, 0.7098f, 0.1961f, 1f);
-        private Color _completelyOverweightColor = new Color(0.7686f, 0f, 0f, 1f);
-        private Color _walkingDrainsColor;
+        private TMP_Text _overweightText;
+        private TMP_Text _walkingDrainsText;
 
         public static WeightBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel)
         {
+            // setup static variables for later
+            _healthParametersPanel = healthParametersPanel;
+            _walkingDrainsColor = Color.Lerp(_overweightColor, _completelyOverweightColor, 0.5f);
+
+            // get text template
+            var weightPanel = _healthParametersPanelWeightField.GetValue(_healthParametersPanel) as HealthParameterPanel;
+            _textTemplate = (_healthParameterPanelCurrentValueField.GetValue(weightPanel) as TMP_Text).gameObject;
+
             // setup container
             var containerGO = new GameObject("WeightBarContainer", typeof(RectTransform));
             containerGO.layer = healthParametersPanel.gameObject.layer;
@@ -60,60 +78,7 @@ namespace WeightBar
             return component;
         }
 
-        private void Awake()
-        {
-            _walkingDrainsColor = Color.Lerp(_overweightColor, _completelyOverweightColor, 0.5f);
-
-            // get health controller from parent
-            var healthParametersPanel = transform.parent.gameObject.GetComponent<HealthParametersPanel>();
-            _healthController = _healthParametersPanelHealthController.GetValue(healthParametersPanel) as IHealthController;
-
-            // setup background
-            _backgroundImage = CreateProgressImage("Background");
-            _backgroundImage.color = Color.black;
-
-            // setup current weight 
-            _progressImage = CreateProgressImage("CurrentWeight");
-
-            // setup tick marks
-            _overweightTickMark = CreateTickMark("Overweight Tick");
-            _walkingDrainsTickMark = CreateTickMark("Walking Drains Tick");
-        }
-
-        private void OnEnable()
-        {
-            OnUpdateWeightLimits();
-
-            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
-            UI.BindEvent(_skills.Strength.OnLevelUp, OnUpdateWeightLimits);
-        }
-
-        private Image CreateTickMark(string name)
-        {
-            var tickMarkGO = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
-            tickMarkGO.transform.SetParent(transform);
-            tickMarkGO.transform.localScale = Vector3.one;
-            tickMarkGO.RectTransform().sizeDelta = _tickSize;
-            tickMarkGO.RectTransform().anchoredPosition = Vector2.zero;
-            var image = tickMarkGO.AddComponent<Image>();
-
-            var texture = TextureUtils.LoadTexture2DFromPath(_progressTexturePath);
-            image.sprite = Sprite.Create(texture,
-                                         new Rect(0f, 0f, texture.width, texture.height),
-                                         new Vector2(texture.width / 2, texture.height / 2));
-            image.type = Image.Type.Simple;
-            image.color = Color.black;
-
-            return image;
-        }
-
-        private void MoveTickMark(Image tickMark, float relPos)
-        {
-            var pos = Mathf.Lerp(-_barSize.x/2, _barSize.x / 2, relPos);
-            tickMark.RectTransform().anchoredPosition = new Vector2(pos, 0);
-        }
-
-        private Image CreateProgressImage(string name)
+        private static Image CreateProgressImage(string name, Transform transform)
         {
             // setup progress bar background
             var imageGO = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
@@ -134,10 +99,109 @@ namespace WeightBar
             return image;
         }
 
+        private static Image CreateTickMark(string name, Transform transform)
+        {
+            var tickMarkGO = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
+            tickMarkGO.transform.SetParent(transform);
+            tickMarkGO.transform.localScale = Vector3.one;
+            tickMarkGO.RectTransform().sizeDelta = _tickSize;
+            tickMarkGO.RectTransform().anchoredPosition = Vector2.zero;
+            var image = tickMarkGO.AddComponent<Image>();
+
+            var texture = TextureUtils.LoadTexture2DFromPath(_progressTexturePath);
+            image.sprite = Sprite.Create(texture,
+                                         new Rect(0f, 0f, texture.width, texture.height),
+                                         new Vector2(texture.width / 2, texture.height / 2));
+            image.type = Image.Type.Simple;
+            image.color = Color.black;
+
+            return image;
+        }
+
+        private static TMP_Text CreateText(string name, Transform transform)
+        {
+            var textGO = Instantiate(_textTemplate);
+            textGO.name = name;
+            textGO.transform.SetParent(transform);
+            textGO.transform.ResetTransform();
+            textGO.RectTransform().sizeDelta = _textSize;
+            textGO.RectTransform().anchorMin = new Vector2(0.5f, 0.5f);
+            textGO.RectTransform().anchorMax = new Vector2(0.5f, 0.5f);
+            textGO.RectTransform().pivot = new Vector2(0.5f, 0.5f);
+            textGO.RectTransform().anchoredPosition = _textPosition;
+
+            var text = textGO.GetComponent<TMP_Text>();
+            text.alignment = TextAlignmentOptions.Center;
+            text.fontSizeMin = _textFontSize;
+            text.fontSizeMax = _textFontSize;
+            text.fontSize = _textFontSize;
+
+            return text;
+        }
+
+        private void Awake()
+        {
+            // get health controller from parent
+            _healthController = _healthParametersPanelHealthControllerField.GetValue(_healthParametersPanel) as IHealthController;
+
+            // setup background
+            _backgroundImage = CreateProgressImage("Background", transform);
+            _backgroundImage.color = Color.black;
+
+            // setup current weight 
+            _progressImage = CreateProgressImage("CurrentWeight", transform);
+
+            // setup tick marks
+            _overweightTickMark = CreateTickMark("Overweight Tick", transform);
+            _walkingDrainsTickMark = CreateTickMark("Walking Drains Tick", transform);
+
+            // setup texts
+            _overweightText = CreateText("Overweight Text", transform);
+            _walkingDrainsText = CreateText("Walking Drains Text", transform);
+            _overweightText.color = Color.grey;
+            _walkingDrainsText.color = Color.grey;
+            ShowHideText();
+        }
+
+        private void OnEnable()
+        {
+            OnUpdateWeightLimits();
+
+            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
+            UI.BindEvent(_skills.Strength.OnLevelUp, OnUpdateWeightLimits);
+        }
+
+        private void MoveRelativeToBar(Component component, float relPos)
+        {
+            var x = Mathf.Lerp(-_barSize.x/2, _barSize.x / 2, relPos);
+            var y = component.RectTransform().anchoredPosition.y;
+            component.RectTransform().anchoredPosition = new Vector2(x, y);
+        }
+
+        private void ShowHideText()
+        {
+            if (Settings.DisplayText.Value)
+            {
+                _overweightText.gameObject.SetActive(true);
+                _walkingDrainsText.gameObject.SetActive(true);
+            }
+            else
+            {
+                _overweightText.gameObject.SetActive(false);
+                _walkingDrainsText.gameObject.SetActive(false);
+            }
+        }
+
+        internal void OnSettingChanged()
+        {
+            ShowHideText();
+        }
+
         private void OnUpdateWeight()
         {
             UpdateWeight();
         }
+
         private void OnUpdateWeightLimits()
         {
             var stamina = Singleton<BackendConfigSettingsClass>.Instance.Stamina;
@@ -147,8 +211,15 @@ namespace WeightBar
             _baseOverweightLimits = stamina.BaseOverweightLimits * relativeModifier + absoluteModifier;
             _walkOverweightLimits = stamina.WalkOverweightLimits * relativeModifier + absoluteModifier;
 
-            MoveTickMark(_overweightTickMark, _baseOverweightLimits.x / _baseOverweightLimits.y);
-            MoveTickMark(_walkingDrainsTickMark, _walkOverweightLimits.x / _baseOverweightLimits.y);
+            // update tick mark positions
+            MoveRelativeToBar(_overweightTickMark, _baseOverweightLimits.x / _baseOverweightLimits.y);
+            MoveRelativeToBar(_walkingDrainsTickMark, _walkOverweightLimits.x / _baseOverweightLimits.y);
+
+            // update text values and positions
+            MoveRelativeToBar(_overweightText, _baseOverweightLimits.x / _baseOverweightLimits.y);
+            MoveRelativeToBar(_walkingDrainsText, _walkOverweightLimits.x / _baseOverweightLimits.y);
+            _overweightText.text = $"{_baseOverweightLimits.x:f1}";
+            _walkingDrainsText.text = $"{_walkOverweightLimits.x:f1}";
 
             UpdateWeight(false);
         }
@@ -161,6 +232,8 @@ namespace WeightBar
             var maxWeight = _baseOverweightLimits.y;
 
             // setup color
+            _overweightTickMark.color = Color.black;
+            _walkingDrainsTickMark.color = Color.black;
             if (weight < overweight)
             {
                 _progressImage.color = _unencumberedColor;
@@ -170,20 +243,15 @@ namespace WeightBar
             else if (weight > overweight && weight < walkingDrainsWeight)
             {
                 _progressImage.color = _overweightColor;
-                _overweightTickMark.color = Color.black;
                 _walkingDrainsTickMark.color = _walkingDrainsColor;
             }
             else if (weight > walkingDrainsWeight && weight < maxWeight)
             {
                 _progressImage.color = _walkingDrainsColor;
-                _overweightTickMark.color = Color.black;
-                _walkingDrainsTickMark.color = Color.black;
             }
             else if (weight > maxWeight)
             {
                 _progressImage.color = Color.red;
-                _overweightTickMark.color = Color.black;
-                _walkingDrainsTickMark.color = Color.black;
             }
 
             // tween to the proper length
