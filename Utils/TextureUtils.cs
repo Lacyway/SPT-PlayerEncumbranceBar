@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace WeightBar.Utils
+namespace PlayerEncumbranceBar.Utils
 {
     public static class TextureUtils
     {

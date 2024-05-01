@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 // THIS IS HEAVILY BASED ON DRAKIAXYZ'S SPT-QUICKMOVETOCONTAINER
-namespace WeightBar
+namespace PlayerEncumbranceBar
 {
     internal class Settings
     {

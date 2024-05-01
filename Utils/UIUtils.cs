@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace WeightBar.Utils
+namespace PlayerEncumbranceBar.Utils
 {
     public static class UIUtils
     {

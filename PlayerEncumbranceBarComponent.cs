@@ -12,11 +12,11 @@ using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using WeightBar.Utils;
+using PlayerEncumbranceBar.Utils;
 
-namespace WeightBar
+namespace PlayerEncumbranceBar
 {
-    public class WeightBarComponent : UIElement
+    public class PlayerEncumbranceBarComponent : UIElement
     {
         private static string _progressTexturePath = Path.Combine(Plugin.PluginFolder, "progressBarFill.png"); // 1x9
         private static FieldInfo _healthParameterPanelCurrentValueField = AccessTools.Field(typeof(HealthParameterPanel), "_currentValue");
@@ -47,7 +47,7 @@ namespace WeightBar
         private TMP_Text _overweightText;
         private TMP_Text _walkingDrainsText;
 
-        public static WeightBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
+        public static PlayerEncumbranceBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
         {
             // check if healthParametersPanel not yet setup all the way
             if (!healthParametersPanel || !weightPanel)
@@ -64,7 +64,7 @@ namespace WeightBar
             _textTemplate = (_healthParameterPanelCurrentValueField.GetValue(weightPanel) as TMP_Text).gameObject;
 
             // setup container
-            var containerGO = new GameObject("WeightBarContainer", typeof(RectTransform));
+            var containerGO = new GameObject("PlayerEncumbranceBarContainer", typeof(RectTransform));
             containerGO.layer = healthParametersPanel.gameObject.layer;
             containerGO.transform.SetParent(healthParametersPanel.gameObject.transform);
             containerGO.transform.localScale = Vector3.one;
@@ -77,7 +77,7 @@ namespace WeightBar
             // HACK: move healthparameterspanel to make sure the bottom bar renders behind us
             healthParametersPanel.gameObject.transform.SetAsLastSibling();
 
-            var component = containerGO.AddComponent<WeightBarComponent>();
+            var component = containerGO.AddComponent<PlayerEncumbranceBarComponent>();
             return component;
         }
 

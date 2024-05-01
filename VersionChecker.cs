@@ -24,7 +24,7 @@ namespace DrakiaXYZ.VersionChecker
         public static bool CheckEftVersion(ManualLogSource Logger, PluginInfo Info, ConfigFile Config = null)
         {
             int currentVersion = FileVersionInfo.GetVersionInfo(BepInEx.Paths.ExecutablePath).FilePrivatePart;
-            int buildVersion = WeightBar.Plugin.TarkovVersion;
+            int buildVersion = PlayerEncumbranceBar.Plugin.TarkovVersion;
             if (currentVersion != buildVersion)
             {
                 string errorMessage = $"ERROR: This version of Stash Search was built for Tarkov {buildVersion}, but you are running {currentVersion}. Please download the correct plugin version.";

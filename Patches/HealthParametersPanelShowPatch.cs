@@ -4,7 +4,7 @@ using EFT.UI.Health;
 using HarmonyLib;
 using System.Reflection;
 
-namespace WeightBar.Patches
+namespace PlayerEncumbranceBar.Patches
 {
     internal class HealthParametersShowPatch : ModulePatch
     {
