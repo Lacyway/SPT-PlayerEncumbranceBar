@@ -21,7 +21,7 @@ namespace WeightBar
             ConfigEntries.Add(DisplayText = Config.Bind(
                 GeneralSectionTitle,
                 "Display Breakpoint Text",
-                false,
+                true,
                 new ConfigDescription(
                     "If text for each tick mark breakpoint should be displayed",
                     null,

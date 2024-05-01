@@ -24,7 +24,6 @@ namespace WeightBar
         private static Inventory _inventory => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Inventory;
         private static SkillManager _skills => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Skills;
 
-        private static HealthParametersPanel _healthParametersPanel;  // set by AttachToHealthParametersPanel
         private static IHealthController _healthController;  // set by AttachToHealthParametersPanel
         private static GameObject _textTemplate;
         private static Color _unencumberedColor = new(0.6431f, 0.7725f, 0.6627f, 1f);
@@ -56,7 +55,6 @@ namespace WeightBar
                 return null;
             }
 
-            _healthParametersPanel = healthParametersPanel;
             _healthController = healthController;
 
             // setup walking drains color, just do halfway between the two other colors
@@ -83,89 +81,35 @@ namespace WeightBar
             return component;
         }
 
-        private static Image CreateProgressImage(string name, Transform transform)
-        {
-            // setup progress bar background
-            var imageGO = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
-            imageGO.transform.SetParent(transform);
-            imageGO.transform.localScale = Vector3.one;
-            imageGO.RectTransform().sizeDelta = _barSize;
-            imageGO.RectTransform().anchoredPosition = Vector2.zero;
-            var image = imageGO.AddComponent<Image>();
-
-            var texture = TextureUtils.LoadTexture2DFromPath(_progressTexturePath);
-            image.sprite = Sprite.Create(texture,
-                                         new Rect(0f, 0f, texture.width, texture.height),
-                                         new Vector2(texture.width / 2, texture.height / 2));
-            image.type = Image.Type.Filled;
-            image.fillMethod = Image.FillMethod.Horizontal;
-            image.fillAmount = 1;
-
-            return image;
-        }
-
-        private static Image CreateTickMark(string name, Transform transform)
-        {
-            var tickMarkGO = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
-            tickMarkGO.transform.SetParent(transform);
-            tickMarkGO.transform.localScale = Vector3.one;
-            tickMarkGO.RectTransform().sizeDelta = _tickSize;
-            tickMarkGO.RectTransform().anchoredPosition = Vector2.zero;
-            var image = tickMarkGO.AddComponent<Image>();
-
-            var texture = TextureUtils.LoadTexture2DFromPath(_progressTexturePath);
-            image.sprite = Sprite.Create(texture,
-                                         new Rect(0f, 0f, texture.width, texture.height),
-                                         new Vector2(texture.width / 2, texture.height / 2));
-            image.type = Image.Type.Simple;
-            image.color = Color.black;
-
-            return image;
-        }
-
-        private static TMP_Text CreateText(string name, Transform transform)
-        {
-            var textGO = Instantiate(_textTemplate);
-            textGO.name = name;
-            textGO.transform.SetParent(transform);
-            textGO.transform.ResetTransform();
-            textGO.RectTransform().sizeDelta = _textSize;
-            textGO.RectTransform().anchorMin = new Vector2(0.5f, 0.5f);
-            textGO.RectTransform().anchorMax = new Vector2(0.5f, 0.5f);
-            textGO.RectTransform().pivot = new Vector2(0.5f, 0.5f);
-            textGO.RectTransform().anchoredPosition = _textPosition;
-
-            var text = textGO.GetComponent<TMP_Text>();
-            text.alignment = TextAlignmentOptions.Center;
-            text.fontSizeMin = _textFontSize;
-            text.fontSizeMax = _textFontSize;
-            text.fontSize = _textFontSize;
-
-            return text;
-        }
-
         private void Awake()
         {
+            var texture = TextureUtils.LoadTexture2DFromPath(_progressTexturePath);
+
             // setup background
-            _backgroundImage = CreateProgressImage("Background", transform);
+            _backgroundImage = UIUtils.CreateProgressImage("Background", transform, _barSize, texture);
             _backgroundImage.color = Color.black;
 
             // setup current weight 
-            _progressImage = CreateProgressImage("CurrentWeight", transform);
+            _progressImage = UIUtils.CreateProgressImage("CurrentWeight", transform, _barSize, texture);
 
             // setup tick marks
-            _overweightTickMark = CreateTickMark("Overweight Tick", transform);
-            _walkingDrainsTickMark = CreateTickMark("Walking Drains Tick", transform);
+            _overweightTickMark = UIUtils.CreateImage("Overweight Tick", transform, _tickSize, texture);
+            _walkingDrainsTickMark = UIUtils.CreateImage("Walking Drains Tick", transform, _tickSize, texture);
 
             // setup texts
-            _overweightText = CreateText("Overweight Text", transform);
-            _walkingDrainsText = CreateText("Walking Drains Text", transform);
+            _overweightText = UIUtils.CreateText(_textTemplate, "Overweight Text", transform, _textSize, _textFontSize);
+            _overweightText.RectTransform().anchoredPosition = _textPosition;
             _overweightText.color = Color.grey;
+
+            _walkingDrainsText = UIUtils.CreateText(_textTemplate, "Walking Drains Text", transform, _textSize, _textFontSize);
+            _walkingDrainsText.RectTransform().anchoredPosition = _textPosition;
             _walkingDrainsText.color = Color.grey;
+
             ShowHideText();
 
-            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
+            // NOTE: bindevent seems to call the method immediately
             UI.BindEvent(_skills.Strength.OnLevelUp, OnUpdateWeightLimits);
+            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
         }
 
         private void OnEnable()
@@ -229,41 +173,49 @@ namespace WeightBar
         private void UpdateWeight(bool shouldTween = true)
         {
             var weight = _skills.StrengthBuffElite ? _inventory.TotalWeightEliteSkill : _inventory.TotalWeight;
-            var overweight = _baseOverweightLimits.x;
-            var walkingDrainsWeight = _walkOverweightLimits.x;
-            var maxWeight = _baseOverweightLimits.y;
+            var overweightLimit = _baseOverweightLimits.x;
+            var walkingDrainsWeightLimit = _walkOverweightLimits.x;
+            var maxWeightLimit = _baseOverweightLimits.y;
 
-            // setup color
+            // setup colors for all color changing things
             _overweightTickMark.color = Color.black;
             _walkingDrainsTickMark.color = Color.black;
-            if (weight < overweight)
+            _overweightText.color = Color.grey;
+            _walkingDrainsText.color = Color.grey;
+
+            if (weight < overweightLimit)
             {
                 _progressImage.color = _unencumberedColor;
                 _overweightTickMark.color = _overweightColor;
                 _walkingDrainsTickMark.color = _walkingDrainsColor;
             }
-            else if (weight > overweight && weight < walkingDrainsWeight)
+            else if (weight > overweightLimit && weight < walkingDrainsWeightLimit)
             {
                 _progressImage.color = _overweightColor;
                 _walkingDrainsTickMark.color = _walkingDrainsColor;
+                _overweightText.color = _overweightColor;
             }
-            else if (weight > walkingDrainsWeight && weight < maxWeight)
+            else if (weight > walkingDrainsWeightLimit && weight < maxWeightLimit)
             {
                 _progressImage.color = _walkingDrainsColor;
+                _overweightText.color = _overweightColor;
+                _walkingDrainsText.color = _walkingDrainsColor;
             }
-            else if (weight > maxWeight)
+            else if (weight > maxWeightLimit)
             {
                 _progressImage.color = Color.red;
+                _overweightText.color = _overweightColor;
+                _walkingDrainsText.color = _walkingDrainsColor;
             }
 
             // tween to the proper length
             if (!shouldTween || _tweenLength == 0)
             {
-                _progressImage.fillAmount = weight / maxWeight;
+                _progressImage.fillAmount = weight / maxWeightLimit;
             }
             else
             {
-                _progressImage.DOFillAmount(weight / maxWeight, _tweenLength);
+                _progressImage.DOFillAmount(weight / maxWeightLimit, _tweenLength);
             }
         }
     }
