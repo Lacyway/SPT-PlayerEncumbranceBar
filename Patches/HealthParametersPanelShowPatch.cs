@@ -16,7 +16,7 @@ namespace PlayerEncumbranceBar.Patches
         [PatchPostfix]
         public static void PatchPostfix(HealthParametersPanel __instance, HealthParameterPanel ____weight, IHealthController ___ihealthController_0)
         {
-            Plugin.Instance.TryAttachToHealthParametersPanel(__instance, ____weight, ___ihealthController_0);
+            Plugin.Instance.OnHealthParametersPanelShow(__instance, ____weight, ___ihealthController_0);
         }
     }
 }

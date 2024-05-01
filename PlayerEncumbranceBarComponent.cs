@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using Aki.Reflection.Utils;
@@ -106,15 +107,28 @@ namespace PlayerEncumbranceBar
             _walkingDrainsText.color = Color.grey;
 
             ShowHideText();
-
-            // NOTE: bindevent seems to call the method immediately
-            UI.BindEvent(_skills.Strength.OnLevelUp, OnUpdateWeightLimits);
-            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
         }
 
-        private void OnEnable()
+        internal void Show(IHealthController healthController)
         {
-            OnUpdateWeightLimits();
+            UI.Dispose();
+
+            _healthController = healthController;
+
+            // NOTE: bindevent seems to call the method immediately
+            UI.BindEvent(_skills.Strength.OnLevelUp, UpdateWeightLimits);
+            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
+
+            // for health effects
+            _healthController.EffectStartedEvent += OnHealthEffect;
+			_healthController.EffectResidualEvent += OnHealthEffect;
+			_healthController.EffectRemovedEvent += OnHealthEffect;
+            UI.AddDisposable(new Action(() => _healthController.EffectStartedEvent -= OnHealthEffect));
+            UI.AddDisposable(new Action(() => _healthController.EffectResidualEvent -= OnHealthEffect));
+            UI.AddDisposable(new Action(() => _healthController.EffectRemovedEvent -= OnHealthEffect));
+
+            // this might be redunant, with bindevent calling immediately, but make sure
+            UpdateWeightLimits();
         }
 
         private void MoveRelativeToBar(Component component, float relPos)
@@ -148,7 +162,12 @@ namespace PlayerEncumbranceBar
             UpdateWeight();
         }
 
-        private void OnUpdateWeightLimits()
+        private void OnHealthEffect(IEffect _)
+        {
+            UpdateWeightLimits();
+        }
+
+        private void UpdateWeightLimits()
         {
             var stamina = Singleton<BackendConfigSettingsClass>.Instance.Stamina;
             var relativeModifier = _skills.CarryingWeightRelativeModifier * _healthController.CarryingWeightRelativeModifier;

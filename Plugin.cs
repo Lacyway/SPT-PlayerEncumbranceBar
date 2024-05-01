@@ -19,7 +19,7 @@ namespace PlayerEncumbranceBar
         public static ManualLogSource Log => Instance.Logger;
         public static string PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-        public PlayerEncumbranceBarComponent encumbranceBar;
+        public PlayerEncumbranceBarComponent PlayerEncumbranceBar;
 
         internal void Awake()
         {
@@ -29,7 +29,7 @@ namespace PlayerEncumbranceBar
             }
 
             Settings.Init(Config);
-            Config.SettingChanged += (_, _) => encumbranceBar.OnSettingChanged();
+            Config.SettingChanged += (_, _) => PlayerEncumbranceBar.OnSettingChanged();
 
             Instance = this;
             DontDestroyOnLoad(this);
@@ -38,14 +38,14 @@ namespace PlayerEncumbranceBar
             new HealthParametersShowPatch().Enable();
         }
 
-        public void TryAttachToHealthParametersPanel(HealthParametersPanel healthParametersScreen, HealthParameterPanel weightPanel, IHealthController healthController)
+        public void OnHealthParametersPanelShow(HealthParametersPanel parametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
         {
-            if (encumbranceBar != null)
+            if (!PlayerEncumbranceBar)
             {
-                return;
+                PlayerEncumbranceBar = PlayerEncumbranceBarComponent.AttachToHealthParametersPanel(parametersPanel, weightPanel, healthController);
             }
 
-            encumbranceBar = PlayerEncumbranceBarComponent.AttachToHealthParametersPanel(healthParametersScreen, weightPanel, healthController);
+            PlayerEncumbranceBar.Show(healthController);
         }
     }
 }
