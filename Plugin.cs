@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using EFT.UI.Health;
+using EFT.HealthSystem;
 
 namespace WeightBar
 {
@@ -37,14 +38,14 @@ namespace WeightBar
             new HealthParametersShowPatch().Enable();
         }
 
-        public void TryAttachToHealthParametersPanel(HealthParametersPanel healthParametersScreen)
+        public void TryAttachToHealthParametersPanel(HealthParametersPanel healthParametersScreen, HealthParameterPanel weightPanel, IHealthController healthController)
         {
             if (weightBarComponent != null)
             {
                 return;
             }
 
-            weightBarComponent = WeightBarComponent.AttachToHealthParametersPanel(healthParametersScreen);
+            weightBarComponent = WeightBarComponent.AttachToHealthParametersPanel(healthParametersScreen, weightPanel, healthController);
         }
     }
 }

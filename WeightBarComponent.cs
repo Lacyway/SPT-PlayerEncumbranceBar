@@ -19,14 +19,13 @@ namespace WeightBar
     public class WeightBarComponent : UIElement
     {
         private static string _progressTexturePath = Path.Combine(Plugin.PluginFolder, "progressBarFill.png"); // 1x9
-        private static FieldInfo _healthParametersPanelHealthControllerField = AccessTools.Field(typeof(HealthParametersPanel), "ihealthController_0");
-        private static FieldInfo _healthParametersPanelWeightField = AccessTools.Field(typeof(HealthParametersPanel), "_weight");
         private static FieldInfo _healthParameterPanelCurrentValueField = AccessTools.Field(typeof(HealthParameterPanel), "_currentValue");
 
         private static Inventory _inventory => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Inventory;
         private static SkillManager _skills => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Skills;
 
-        private static HealthParametersPanel _healthParametersPanel; // set by AttachToHealthParametersPanel
+        private static HealthParametersPanel _healthParametersPanel;  // set by AttachToHealthParametersPanel
+        private static IHealthController _healthController;  // set by AttachToHealthParametersPanel
         private static GameObject _textTemplate;
         private static Color _unencumberedColor = new(0.6431f, 0.7725f, 0.6627f, 1f);
         private static Color _overweightColor = new(0.9176f, 0.7098f, 0.1961f, 1f);
@@ -40,7 +39,6 @@ namespace WeightBar
         private static Vector2 _textPosition = new(0, -11);
         private static float _tweenLength = 0.25f; // seconds
 
-        private IHealthController _healthController;
         private Image _progressImage;
         private Image _backgroundImage;
         private Vector2 _baseOverweightLimits;
@@ -50,16 +48,16 @@ namespace WeightBar
         private TMP_Text _overweightText;
         private TMP_Text _walkingDrainsText;
 
-        public static WeightBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel)
+        public static WeightBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
         {
-            _healthParametersPanel = healthParametersPanel;
-
             // check if healthParametersPanel not yet setup all the way
-            var weightPanel = _healthParametersPanelWeightField.GetValue(_healthParametersPanel) as HealthParameterPanel;
-            if (!weightPanel)
+            if (!healthParametersPanel || !weightPanel)
             {
                 return null;
             }
+
+            _healthParametersPanel = healthParametersPanel;
+            _healthController = healthController;
 
             // setup walking drains color, just do halfway between the two other colors
             _walkingDrainsColor = Color.Lerp(_overweightColor, _completelyOverweightColor, 0.5f);
@@ -148,9 +146,6 @@ namespace WeightBar
 
         private void Awake()
         {
-            // get health controller from parent
-            _healthController = _healthParametersPanelHealthControllerField.GetValue(_healthParametersPanel) as IHealthController;
-
             // setup background
             _backgroundImage = CreateProgressImage("Background", transform);
             _backgroundImage.color = Color.black;
@@ -168,14 +163,14 @@ namespace WeightBar
             _overweightText.color = Color.grey;
             _walkingDrainsText.color = Color.grey;
             ShowHideText();
+
+            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
+            UI.BindEvent(_skills.Strength.OnLevelUp, OnUpdateWeightLimits);
         }
 
         private void OnEnable()
         {
             OnUpdateWeightLimits();
-
-            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
-            UI.BindEvent(_skills.Strength.OnLevelUp, OnUpdateWeightLimits);
         }
 
         private void MoveRelativeToBar(Component component, float relPos)

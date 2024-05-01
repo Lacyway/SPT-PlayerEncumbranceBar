@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.HealthSystem;
 using EFT.UI.Health;
 using HarmonyLib;
 using System.Reflection;
@@ -13,9 +14,9 @@ namespace WeightBar.Patches
         }
 
         [PatchPostfix]
-        public static void PatchPostfix(HealthParametersPanel __instance)
+        public static void PatchPostfix(HealthParametersPanel __instance, HealthParameterPanel ____weight, IHealthController ___ihealthController_0)
         {
-            Plugin.Instance.TryAttachToHealthParametersPanel(__instance);
+            Plugin.Instance.TryAttachToHealthParametersPanel(__instance, ____weight, ___ihealthController_0);
         }
     }
 }
