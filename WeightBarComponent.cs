@@ -52,12 +52,18 @@ namespace WeightBar
 
         public static WeightBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel)
         {
+            // check if healthParametersPanel not yet setup all the way
+            var weightPanel = _healthParametersPanelWeightField.GetValue(_healthParametersPanel) as HealthParameterPanel;
+            if (!weightPanel)
+            {
+                return null;
+            }
+
             // setup static variables for later
             _healthParametersPanel = healthParametersPanel;
             _walkingDrainsColor = Color.Lerp(_overweightColor, _completelyOverweightColor, 0.5f);
 
             // get text template
-            var weightPanel = _healthParametersPanelWeightField.GetValue(_healthParametersPanel) as HealthParameterPanel;
             _textTemplate = (_healthParameterPanelCurrentValueField.GetValue(weightPanel) as TMP_Text).gameObject;
 
             // setup container

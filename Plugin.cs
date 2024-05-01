@@ -37,14 +37,14 @@ namespace WeightBar
             new HealthParametersShowPatch().Enable();
         }
 
-        public void TryAttachToHealthParametersPanel(HealthParametersPanel inventoryScreen)
+        public void TryAttachToHealthParametersPanel(HealthParametersPanel healthParametersScreen)
         {
             if (weightBarComponent != null)
             {
                 return;
             }
 
-            weightBarComponent = WeightBarComponent.AttachToHealthParametersPanel(inventoryScreen);
+            weightBarComponent = WeightBarComponent.AttachToHealthParametersPanel(healthParametersScreen);
         }
     }
 }
