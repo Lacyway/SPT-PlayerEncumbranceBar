@@ -3,10 +3,10 @@
 Mod that shows a progress bar representing your characters encumberance in the inventory. Labeled tickmarks (text can be turned off) for breakpoints of overweight and walking drains stamina.
 
 ![encumbrance bar gif](Screenshots/encumbrancebar.gif)
-* Always know your carry weight and how close you are to breakpoints *
+*Always know your carry weight and how close you are to breakpoints*
 
 ![encumbrance bar stim gif](Screenshots/encumbrancebar_stims.gif)
-* Updates dynamically with stims and level ups *
+*Updates dynamically with stims and level ups*
 
 ## Installation
 
