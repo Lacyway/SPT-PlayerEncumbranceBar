@@ -29,7 +29,7 @@ namespace PlayerEncumbranceBar
             }
 
             Settings.Init(Config);
-            Config.SettingChanged += (_, _) => PlayerEncumbranceBar.OnSettingChanged();
+            Config.SettingChanged += (x, y) => PlayerEncumbranceBar.OnSettingChanged();
 
             Instance = this;
             DontDestroyOnLoad(this);

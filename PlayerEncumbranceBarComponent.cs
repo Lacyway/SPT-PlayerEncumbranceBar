@@ -27,16 +27,16 @@ namespace PlayerEncumbranceBar
 
         private static IHealthController _healthController;  // set by AttachToHealthParametersPanel
         private static GameObject _textTemplate;
-        private static Color _unencumberedColor = new(0.6431f, 0.7725f, 0.6627f, 1f);
-        private static Color _overweightColor = new(0.9176f, 0.7098f, 0.1961f, 1f);
-        private static Color _completelyOverweightColor = new(0.7686f, 0f, 0f, 1f);
+        private static Color _unencumberedColor = new Color(0.6431f, 0.7725f, 0.6627f, 1f);
+        private static Color _overweightColor = new Color(0.9176f, 0.7098f, 0.1961f, 1f);
+        private static Color _completelyOverweightColor = new Color(0.7686f, 0f, 0f, 1f);
         private static Color _walkingDrainsColor; // set by lerp
-        private static Vector2 _position = new(0, -25);
-        private static Vector2 _barSize = new(550, 9);
-        private static Vector2 _tickSize = new(1, 9);
-        private static Vector2 _textSize = new(40, 20);
+        private static Vector2 _position = new Vector2(0, -25);
+        private static Vector2 _barSize = new Vector2(550, 9);
+        private static Vector2 _tickSize = new Vector2(1, 9);
+        private static Vector2 _textSize = new Vector2(40, 20);
         private static float _textFontSize = 10;
-        private static Vector2 _textPosition = new(0, -11);
+        private static Vector2 _textPosition = new Vector2(0, -11);
         private static float _tweenLength = 0.25f; // seconds
 
         private Image _progressImage;

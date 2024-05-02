@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net471</TargetFramework>
     <AssemblyName>PlayerEncumbranceBar</AssemblyName>
     <Description>Adds a progress bar for your characters weight</Description>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
