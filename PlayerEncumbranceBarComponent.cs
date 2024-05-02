@@ -116,7 +116,7 @@ namespace PlayerEncumbranceBar
             _healthController = healthController;
 
             // NOTE: bindevent seems to call the method immediately
-            UI.BindEvent(_skills.Strength.OnLevelUp, UpdateWeightLimits);
+            UI.BindEvent(_skills.Strength.OnLevelUp, OnStrengthLevelUp);
             UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
 
             // for health effects
@@ -128,7 +128,8 @@ namespace PlayerEncumbranceBar
             UI.AddDisposable(new Action(() => _healthController.EffectRemovedEvent -= OnHealthEffect));
 
             // this might be redunant, with bindevent calling immediately, but make sure
-            UpdateWeightLimits();
+            // don't tween the initial
+            UpdateWeightLimits(false);
         }
 
         private void MoveRelativeToBar(Component component, float relPos)
@@ -162,12 +163,17 @@ namespace PlayerEncumbranceBar
             UpdateWeight();
         }
 
+        private void OnStrengthLevelUp()
+        {
+            UpdateWeightLimits();
+        }
+
         private void OnHealthEffect(IEffect _)
         {
             UpdateWeightLimits();
         }
 
-        private void UpdateWeightLimits()
+        private void UpdateWeightLimits(bool shouldTween = true)
         {
             var stamina = Singleton<BackendConfigSettingsClass>.Instance.Stamina;
             var relativeModifier = _skills.CarryingWeightRelativeModifier * _healthController.CarryingWeightRelativeModifier;
@@ -186,7 +192,7 @@ namespace PlayerEncumbranceBar
             _overweightText.text = $"{_baseOverweightLimits.x:f1}";
             _walkingDrainsText.text = $"{_walkOverweightLimits.x:f1}";
 
-            UpdateWeight(false);
+            UpdateWeight(shouldTween);
         }
 
         private void UpdateWeight(bool shouldTween = true)
@@ -196,45 +202,43 @@ namespace PlayerEncumbranceBar
             var walkingDrainsWeightLimit = _walkOverweightLimits.x;
             var maxWeightLimit = _baseOverweightLimits.y;
 
-            // setup colors for all color changing things
-            _overweightTickMark.color = Color.black;
-            _walkingDrainsTickMark.color = Color.black;
+            // reset colors to unencumbered
+            _progressImage.color = _unencumberedColor;
+            _overweightTickMark.color = _overweightColor;
+            _walkingDrainsTickMark.color = _walkingDrainsColor;
             _overweightText.color = Color.grey;
             _walkingDrainsText.color = Color.grey;
 
-            if (weight < overweightLimit)
-            {
-                _progressImage.color = _unencumberedColor;
-                _overweightTickMark.color = _overweightColor;
-                _walkingDrainsTickMark.color = _walkingDrainsColor;
-            }
-            else if (weight > overweightLimit && weight < walkingDrainsWeightLimit)
+            // overweight colors
+            if (weight > overweightLimit)
             {
                 _progressImage.color = _overweightColor;
-                _walkingDrainsTickMark.color = _walkingDrainsColor;
+                _overweightTickMark.color = Color.black;
                 _overweightText.color = _overweightColor;
             }
-            else if (weight > walkingDrainsWeightLimit && weight < maxWeightLimit)
+
+            // walking drains color
+            if (weight > walkingDrainsWeightLimit)
             {
                 _progressImage.color = _walkingDrainsColor;
-                _overweightText.color = _overweightColor;
-                _walkingDrainsText.color = _walkingDrainsColor;
-            }
-            else if (weight > maxWeightLimit)
-            {
-                _progressImage.color = Color.red;
-                _overweightText.color = _overweightColor;
+                _walkingDrainsTickMark.color = Color.black;
                 _walkingDrainsText.color = _walkingDrainsColor;
             }
 
-            // tween to the proper length
-            if (!shouldTween || _tweenLength == 0)
+            // max weight color
+            if (weight > maxWeightLimit)
             {
-                _progressImage.fillAmount = weight / maxWeightLimit;
+                _progressImage.color = _completelyOverweightColor;
+            }
+
+            // tween to the proper length or set if not tweening
+            if (shouldTween && _tweenLength >= 0)
+            {
+                _progressImage.DOFillAmount(weight / maxWeightLimit, _tweenLength);
             }
             else
             {
-                _progressImage.DOFillAmount(weight / maxWeightLimit, _tweenLength);
+                _progressImage.fillAmount = weight / maxWeightLimit;
             }
         }
     }
