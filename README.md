@@ -4,6 +4,8 @@ Mod that shows a progress bar representing your characters encumberance in the i
 
 ![encumbrance bar gif](Screenshots/encumbrancebar.gif)
 
+![encumbrance bar stim gif](Screenshots/encumbrancebar_stims.gif)
+
 ## Installation
 
 [Releases are here](https://github.com/mpstark/SPT-PlayerEncumbranceBar/releases). Open zip file and drag `BepInEx` folder into root of your SPT-AKI install.
