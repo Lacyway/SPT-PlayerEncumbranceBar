@@ -45,12 +45,11 @@ namespace PlayerEncumbranceBar
                 PlayerEncumbranceBar = PlayerEncumbranceBarComponent.AttachToHealthParametersPanel(parametersPanel, weightPanel, healthController);
             }
 
-            if (!PlayerEncumbranceBar)
+            // check if bar actually exists after trying to attach it
+            if (PlayerEncumbranceBar)
             {
-                return;
+                PlayerEncumbranceBar.Show(healthController);
             }
-
-            PlayerEncumbranceBar.Show(healthController);
         }
     }
 }
