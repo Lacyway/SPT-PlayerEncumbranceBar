@@ -96,7 +96,7 @@
     <ItemGroup>
       <VersionFile Include="VERSION.txt" />
       <VersionCs Include="$(ProjectDir)Version.cs" />
-      <Compile Include="@(VersionCs)" />
+      <Compile Include="@(VersionCs)" Exclude="@(VersionCs)" /> <!-- Resolves double include -->
       <FileWrites Include="@(VersionCs)" />
     </ItemGroup>
 
