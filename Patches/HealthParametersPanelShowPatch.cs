@@ -1,8 +1,8 @@
-﻿using Aki.Reflection.Patching;
+﻿using System.Reflection;
+using Aki.Reflection.Patching;
 using EFT.HealthSystem;
 using EFT.UI.Health;
 using HarmonyLib;
-using System.Reflection;
 
 namespace PlayerEncumbranceBar.Patches
 {

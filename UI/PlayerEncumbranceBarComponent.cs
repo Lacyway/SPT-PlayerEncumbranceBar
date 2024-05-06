@@ -1,19 +1,17 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Aki.Reflection.Utils;
 using Comfort.Common;
 using DG.Tweening;
-using EFT;
 using EFT.HealthSystem;
-using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Health;
 using HarmonyLib;
+using PlayerEncumbranceBar.Config;
+using PlayerEncumbranceBar.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using PlayerEncumbranceBar.Utils;
 
 namespace PlayerEncumbranceBar
 {
@@ -21,9 +19,6 @@ namespace PlayerEncumbranceBar
     {
         private static string _progressTexturePath = Path.Combine(Plugin.PluginFolder, "progressBarFill.png"); // 1x9
         private static FieldInfo _healthParameterPanelCurrentValueField = AccessTools.Field(typeof(HealthParameterPanel), "_currentValue");
-
-        private static Inventory _inventory => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Inventory;
-        private static SkillManager _skills => ClientAppUtils.GetMainApp().GetClientBackEndSession().Profile.Skills;
 
         private static IHealthController _healthController;  // set by AttachToHealthParametersPanel
         private static GameObject _textTemplate;
@@ -48,7 +43,9 @@ namespace PlayerEncumbranceBar
         private TMP_Text _overweightText;
         private TMP_Text _walkingDrainsText;
 
-        public static PlayerEncumbranceBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
+        public static PlayerEncumbranceBarComponent AttachToHealthParametersPanel(HealthParametersPanel healthParametersPanel,
+                                                                                  HealthParameterPanel weightPanel,
+                                                                                  IHealthController healthController)
         {
             // check if healthParametersPanel not yet setup all the way
             if (!healthParametersPanel || !weightPanel)
@@ -69,13 +66,13 @@ namespace PlayerEncumbranceBar
             containerGO.layer = healthParametersPanel.gameObject.layer;
             containerGO.transform.SetParent(healthParametersPanel.gameObject.transform);
             containerGO.transform.localScale = Vector3.one;
-            containerGO.RectTransform().sizeDelta = _barSize;
-            containerGO.RectTransform().anchoredPosition = _position;
+            containerGO.GetRectTransform().sizeDelta = _barSize;
+            containerGO.GetRectTransform().anchoredPosition = _position;
 
             var layoutElement = containerGO.AddComponent<LayoutElement>();
             layoutElement.ignoreLayout = true;
 
-            // HACK: move healthparameterspanel to make sure the bottom bar renders behind us
+            // HACK: move HealthParametersPanel to make sure the bottom bar renders behind us
             healthParametersPanel.gameObject.transform.SetAsLastSibling();
 
             var component = containerGO.AddComponent<PlayerEncumbranceBarComponent>();
@@ -90,7 +87,7 @@ namespace PlayerEncumbranceBar
             _backgroundImage = UIUtils.CreateProgressImage("Background", transform, _barSize, texture);
             _backgroundImage.color = Color.black;
 
-            // setup current weight 
+            // setup current weight
             _progressImage = UIUtils.CreateProgressImage("CurrentWeight", transform, _barSize, texture);
 
             // setup tick marks
@@ -99,11 +96,11 @@ namespace PlayerEncumbranceBar
 
             // setup texts
             _overweightText = UIUtils.CreateText(_textTemplate, "Overweight Text", transform, _textSize, _textFontSize);
-            _overweightText.RectTransform().anchoredPosition = _textPosition;
+            _overweightText.GetRectTransform().anchoredPosition = _textPosition;
             _overweightText.color = Color.grey;
 
             _walkingDrainsText = UIUtils.CreateText(_textTemplate, "Walking Drains Text", transform, _textSize, _textFontSize);
-            _walkingDrainsText.RectTransform().anchoredPosition = _textPosition;
+            _walkingDrainsText.GetRectTransform().anchoredPosition = _textPosition;
             _walkingDrainsText.color = Color.grey;
 
             ShowHideText();
@@ -111,23 +108,23 @@ namespace PlayerEncumbranceBar
 
         internal void Show(IHealthController healthController)
         {
-            UI.Dispose();
+            this.UIDispose();
 
             _healthController = healthController;
 
-            // NOTE: bindevent seems to call the method immediately
-            UI.BindEvent(_skills.Strength.OnLevelUp, OnStrengthLevelUp);
-            UI.BindEvent(_inventory.OnWeightUpdated, OnUpdateWeight);
+            // NOTE: BindEvent seems to call the method immediately
+            this.UIBindEvent(GameUtils.Skills.Strength.OnLevelUp, OnStrengthLevelUp);
+            this.UIBindEvent(GameUtils.Inventory.OnWeightUpdated, OnUpdateWeight);
 
             // for health effects
             _healthController.EffectStartedEvent += OnHealthEffect;
 			_healthController.EffectResidualEvent += OnHealthEffect;
 			_healthController.EffectRemovedEvent += OnHealthEffect;
-            UI.AddDisposable(new Action(() => _healthController.EffectStartedEvent -= OnHealthEffect));
-            UI.AddDisposable(new Action(() => _healthController.EffectResidualEvent -= OnHealthEffect));
-            UI.AddDisposable(new Action(() => _healthController.EffectRemovedEvent -= OnHealthEffect));
+            this.UIAddDisposable(new Action(() => _healthController.EffectStartedEvent -= OnHealthEffect));
+            this.UIAddDisposable(new Action(() => _healthController.EffectResidualEvent -= OnHealthEffect));
+            this.UIAddDisposable(new Action(() => _healthController.EffectRemovedEvent -= OnHealthEffect));
 
-            // this might be redunant, with bindevent calling immediately, but make sure
+            // this might be redundant, with BindEvent calling immediately, but make sure
             // don't tween the initial
             UpdateWeightLimits(false);
         }
@@ -135,8 +132,8 @@ namespace PlayerEncumbranceBar
         private void MoveRelativeToBar(Component component, float relPos)
         {
             var x = Mathf.Lerp(-_barSize.x/2, _barSize.x / 2, relPos);
-            var y = component.RectTransform().anchoredPosition.y;
-            component.RectTransform().anchoredPosition = new Vector2(x, y);
+            var y = component.GetRectTransform().anchoredPosition.y;
+            component.GetRectTransform().anchoredPosition = new Vector2(x, y);
         }
 
         private void ShowHideText()
@@ -176,7 +173,7 @@ namespace PlayerEncumbranceBar
         private void UpdateWeightLimits(bool shouldTween = true)
         {
             var stamina = Singleton<BackendConfigSettingsClass>.Instance.Stamina;
-            var relativeModifier = _skills.CarryingWeightRelativeModifier * _healthController.CarryingWeightRelativeModifier;
+            var relativeModifier = GameUtils.Skills.CarryingWeightRelativeModifier * _healthController.CarryingWeightRelativeModifier;
             var absoluteModifier = _healthController.CarryingWeightAbsoluteModifier * Vector2.one;
 
             _baseOverweightLimits = stamina.BaseOverweightLimits * relativeModifier + absoluteModifier;
@@ -197,7 +194,7 @@ namespace PlayerEncumbranceBar
 
         private void UpdateWeight(bool shouldTween = true)
         {
-            var weight = _skills.StrengthBuffElite ? _inventory.TotalWeightEliteSkill : _inventory.TotalWeight;
+            var weight = GameUtils.GetPlayerCurrentWeight();
             var overweightLimit = _baseOverweightLimits.x;
             var walkingDrainsWeightLimit = _walkOverweightLimits.x;
             var maxWeightLimit = _baseOverweightLimits.y;

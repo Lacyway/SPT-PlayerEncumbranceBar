@@ -1,12 +1,11 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using DrakiaXYZ.VersionChecker;
-using PlayerEncumbranceBar.Patches;
-using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
-using EFT.UI.Health;
+using BepInEx;
+using BepInEx.Logging;
 using EFT.HealthSystem;
+using EFT.UI.Health;
+using PlayerEncumbranceBar.Config;
+using PlayerEncumbranceBar.Patches;
 
 namespace PlayerEncumbranceBar
 {
@@ -14,7 +13,6 @@ namespace PlayerEncumbranceBar
     [BepInPlugin("com.mpstark.PlayerEncumbranceBar", "PlayerEncumbranceBar", BuildInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
-        public const int TarkovVersion = 29197;
         public static Plugin Instance;
         public static ManualLogSource Log => Instance.Logger;
         public static string PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -23,11 +21,6 @@ namespace PlayerEncumbranceBar
 
         internal void Awake()
         {
-            if (!VersionChecker.CheckEftVersion(Logger, Info, Config))
-            {
-                throw new Exception("Invalid EFT Version");
-            }
-
             Settings.Init(Config);
             Config.SettingChanged += (x, y) => PlayerEncumbranceBar.OnSettingChanged();
 
@@ -38,6 +31,9 @@ namespace PlayerEncumbranceBar
             new HealthParametersShowPatch().Enable();
         }
 
+        /// <summary>
+        /// Try to attach to HealthParametersPanel if needed, and call our own show method
+        /// </summary>
         public void OnHealthParametersPanelShow(HealthParametersPanel parametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
         {
             if (!PlayerEncumbranceBar)

@@ -1,8 +1,8 @@
-﻿using BepInEx.Configuration;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using BepInEx.Configuration;
 
 // THIS IS HEAVILY BASED ON DRAKIAXYZ'S SPT-QUICKMOVETOCONTAINER
-namespace PlayerEncumbranceBar
+namespace PlayerEncumbranceBar.Config
 {
     internal class Settings
     {
@@ -36,7 +36,7 @@ namespace PlayerEncumbranceBar
             int settingOrder = ConfigEntries.Count;
             foreach (var entry in ConfigEntries)
             {
-                ConfigurationManagerAttributes attributes = entry.Description.Tags[0] as ConfigurationManagerAttributes;
+                var attributes = entry.Description.Tags[0] as ConfigurationManagerAttributes;
                 if (attributes != null)
                 {
                     attributes.Order = settingOrder;
