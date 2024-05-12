@@ -51,7 +51,10 @@ namespace PlayerEncumbranceBar.Utils
             if (game != null && game is LocalGame)
             {
                 var localGame = game as LocalGame;
-                profile = localGame.PlayerOwner.Player.Profile;
+                if (localGame?.PlayerOwner?.Player?.Profile != null)
+                {
+                    profile = localGame.PlayerOwner.Player.Profile;
+                }
             }
 
             var inventory = profile.Inventory;
