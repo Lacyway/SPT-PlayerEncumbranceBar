@@ -172,12 +172,11 @@ namespace PlayerEncumbranceBar
 
         private void UpdateWeightLimits(bool shouldTween = true)
         {
-            var stamina = Singleton<BackendConfigSettingsClass>.Instance.Stamina;
             var relativeModifier = GameUtils.Skills.CarryingWeightRelativeModifier * _healthController.CarryingWeightRelativeModifier;
             var absoluteModifier = _healthController.CarryingWeightAbsoluteModifier * Vector2.one;
 
-            _baseOverweightLimits = stamina.BaseOverweightLimits * relativeModifier + absoluteModifier;
-            _walkOverweightLimits = stamina.WalkOverweightLimits * relativeModifier + absoluteModifier;
+            _baseOverweightLimits = GameUtils.GetBaseOverweightLimits() * relativeModifier + absoluteModifier;
+            _walkOverweightLimits = GameUtils.GetWalkOverweightLimits() * relativeModifier + absoluteModifier;
 
             // update tick mark positions
             MoveRelativeToBar(_overweightTickMark, _baseOverweightLimits.x / _baseOverweightLimits.y);

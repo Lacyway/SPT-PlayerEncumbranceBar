@@ -12,7 +12,7 @@ namespace PlayerEncumbranceBar.Utils
                 return null;
             }
 
-            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             tex.LoadImage(File.ReadAllBytes(path));
 
             return tex;
