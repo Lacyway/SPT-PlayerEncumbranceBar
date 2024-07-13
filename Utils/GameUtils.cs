@@ -1,11 +1,11 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Aki.Reflection.Utils;
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using HarmonyLib;
+using SPT.Reflection.Utils;
 using UnityEngine;
 
 namespace PlayerEncumbranceBar.Utils
