@@ -21,7 +21,7 @@ namespace PlayerEncumbranceBar.Utils
                 return m.Name == "BindEvent" && m.GetParameters().Count() == 2;
             });
         private static MethodInfo _uiAddDisposableMethod =
-            AccessTools.Method(_uiFieldBaseType, "AddDisposable", new Type[] { typeof(Action) });
+            AccessTools.Method(_uiFieldBaseType, "AddDisposable", [typeof(Action)]);
 
         public static Image CreateImage(string name, Transform parent, Vector2 imageSize, Texture2D texture)
         {
@@ -75,19 +75,19 @@ namespace PlayerEncumbranceBar.Utils
         public static void UIDispose(this UIElement element)
         {
             var ui = _uiElementUiField.GetValue(element);
-            _uiDisposeMethod.Invoke(ui, new object[]{});
+            _uiDisposeMethod.Invoke(ui, []);
         }
 
         public static void UIBindEvent(this UIElement element, BindableEvent bindableEvent, Action action)
         {
             var ui = _uiElementUiField.GetValue(element);
-            _uiBindEventMethod.Invoke(ui, new object[]{ bindableEvent, action });
+            _uiBindEventMethod.Invoke(ui, [bindableEvent, action]);
         }
 
         public static void UIAddDisposable(this UIElement element, Action action)
         {
             var ui = _uiElementUiField.GetValue(element);
-            _uiAddDisposableMethod.Invoke(ui, new object[]{ action });
+            _uiAddDisposableMethod.Invoke(ui, [action]);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using Comfort.Common;
 using DG.Tweening;
+using Diz.Binding;
 using EFT.HealthSystem;
 using EFT.UI;
 using EFT.UI.Health;
@@ -114,7 +115,7 @@ namespace PlayerEncumbranceBar
 
             // NOTE: BindEvent seems to call the method immediately
             this.UIBindEvent(GameUtils.Skills.Strength.OnLevelUp, OnStrengthLevelUp);
-            this.UIBindEvent(GameUtils.Inventory.OnWeightUpdated, OnUpdateWeight);
+            this.UIBindEvent((BindableEvent)GameUtils.Inventory.OnWeightUpdated, OnUpdateWeight);
 
             // for health effects
             _healthController.EffectStartedEvent += OnHealthEffect;
