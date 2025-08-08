@@ -10,7 +10,7 @@ using PlayerEncumbranceBar.Patches;
 namespace PlayerEncumbranceBar
 {
     // the version number here is generated on build and may have a warning if not yet built
-    [BepInPlugin("com.mpstark.PlayerEncumbranceBar", "PlayerEncumbranceBar", "1.1.2")]
+    [BepInPlugin("com.mpstark.PlayerEncumbranceBar", "PlayerEncumbranceBar", "1.1.3")]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance;
