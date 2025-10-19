@@ -7,45 +7,44 @@ using EFT.UI.Health;
 using PlayerEncumbranceBar.Config;
 using PlayerEncumbranceBar.Patches;
 
-namespace PlayerEncumbranceBar
+namespace PlayerEncumbranceBar;
+
+// the version number here is generated on build and may have a warning if not yet built
+[BepInPlugin("com.mpstark.PlayerEncumbranceBar", "PlayerEncumbranceBar", "1.2.0")]
+public class Plugin : BaseUnityPlugin
 {
-    // the version number here is generated on build and may have a warning if not yet built
-    [BepInPlugin("com.mpstark.PlayerEncumbranceBar", "PlayerEncumbranceBar", "1.1.3")]
-    public class Plugin : BaseUnityPlugin
+    public static Plugin Instance;
+    public static ManualLogSource Log => Instance.Logger;
+    public static string PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+    public PlayerEncumbranceBarComponent PlayerEncumbranceBar;
+
+    internal void Awake()
     {
-        public static Plugin Instance;
-        public static ManualLogSource Log => Instance.Logger;
-        public static string PluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        Settings.Init(Config);
+        Config.SettingChanged += (x, y) => PlayerEncumbranceBar.OnSettingChanged();
 
-        public PlayerEncumbranceBarComponent PlayerEncumbranceBar;
+        Instance = this;
+        DontDestroyOnLoad(this);
 
-        internal void Awake()
+        // patches
+        new HealthParametersShowPatch().Enable();
+    }
+
+    /// <summary>
+    /// Try to attach to HealthParametersPanel if needed, and call our own show method
+    /// </summary>
+    public void OnHealthParametersPanelShow(HealthParametersPanel parametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
+    {
+        if (!PlayerEncumbranceBar)
         {
-            Settings.Init(Config);
-            Config.SettingChanged += (x, y) => PlayerEncumbranceBar.OnSettingChanged();
-
-            Instance = this;
-            DontDestroyOnLoad(this);
-
-            // patches
-            new HealthParametersShowPatch().Enable();
+            PlayerEncumbranceBar = PlayerEncumbranceBarComponent.AttachToHealthParametersPanel(parametersPanel, weightPanel, healthController);
         }
 
-        /// <summary>
-        /// Try to attach to HealthParametersPanel if needed, and call our own show method
-        /// </summary>
-        public void OnHealthParametersPanelShow(HealthParametersPanel parametersPanel, HealthParameterPanel weightPanel, IHealthController healthController)
+        // check if bar actually exists after trying to attach it
+        if (PlayerEncumbranceBar)
         {
-            if (!PlayerEncumbranceBar)
-            {
-                PlayerEncumbranceBar = PlayerEncumbranceBarComponent.AttachToHealthParametersPanel(parametersPanel, weightPanel, healthController);
-            }
-
-            // check if bar actually exists after trying to attach it
-            if (PlayerEncumbranceBar)
-            {
-                PlayerEncumbranceBar.Show(healthController);
-            }
+            PlayerEncumbranceBar.Show(healthController);
         }
     }
 }

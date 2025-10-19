@@ -2,48 +2,47 @@
 using BepInEx.Configuration;
 
 // THIS IS HEAVILY BASED ON DRAKIAXYZ'S SPT-QUICKMOVETOCONTAINER
-namespace PlayerEncumbranceBar.Config
+namespace PlayerEncumbranceBar.Config;
+
+internal class Settings
 {
-    internal class Settings
+    public const string GeneralSectionTitle = "1. General";
+
+    public static ConfigFile Config;
+
+    public static ConfigEntry<bool> DisplayText;
+
+    public static List<ConfigEntryBase> ConfigEntries = new List<ConfigEntryBase>();
+
+    public static void Init(ConfigFile Config)
     {
-        public const string GeneralSectionTitle = "1. General";
+        Settings.Config = Config;
 
-        public static ConfigFile Config;
+        ConfigEntries.Add(DisplayText = Config.Bind(
+            GeneralSectionTitle,
+            "Display Breakpoint Text",
+            true,
+            new ConfigDescription(
+                "If text for each tick mark breakpoint should be displayed",
+                null,
+                new ConfigurationManagerAttributes { })));
 
-        public static ConfigEntry<bool> DisplayText;
+        RecalcOrder();
+    }
 
-        public static List<ConfigEntryBase> ConfigEntries = new List<ConfigEntryBase>();
-
-        public static void Init(ConfigFile Config)
+    private static void RecalcOrder()
+    {
+        // Set the Order field for all settings, to avoid unnecessary changes when adding new settings
+        int settingOrder = ConfigEntries.Count;
+        foreach (var entry in ConfigEntries)
         {
-            Settings.Config = Config;
-
-            ConfigEntries.Add(DisplayText = Config.Bind(
-                GeneralSectionTitle,
-                "Display Breakpoint Text",
-                true,
-                new ConfigDescription(
-                    "If text for each tick mark breakpoint should be displayed",
-                    null,
-                    new ConfigurationManagerAttributes { })));
-
-            RecalcOrder();
-        }
-
-        private static void RecalcOrder()
-        {
-            // Set the Order field for all settings, to avoid unnecessary changes when adding new settings
-            int settingOrder = ConfigEntries.Count;
-            foreach (var entry in ConfigEntries)
+            var attributes = entry.Description.Tags[0] as ConfigurationManagerAttributes;
+            if (attributes != null)
             {
-                var attributes = entry.Description.Tags[0] as ConfigurationManagerAttributes;
-                if (attributes != null)
-                {
-                    attributes.Order = settingOrder;
-                }
-
-                settingOrder--;
+                attributes.Order = settingOrder;
             }
+
+            settingOrder--;
         }
     }
 }
