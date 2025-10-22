@@ -17,6 +17,9 @@ internal class HealthParametersShowPatch : ModulePatch
     [PatchPostfix]
     public static void PatchPostfix(HealthParametersPanel __instance, HealthParameterPanel ____weight, IHealthController ___ihealthController_0)
     {
-        Plugin.Instance.OnHealthParametersPanelShow(__instance, ____weight, ___ihealthController_0);
+        if (___ihealthController_0 is GClass3010)
+        {
+            Plugin.Instance.OnHealthParametersPanelShow(__instance, ____weight, ___ihealthController_0); 
+        }
     }
 }

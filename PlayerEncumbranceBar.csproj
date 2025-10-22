@@ -128,7 +128,7 @@
     <RemoveDir Directories="$(ProjectDir)release" />
     <Copy
       SourceFiles="@(OutputDLL);@(Resources);@(License)"
-      DestinationFolder="$(ProjectDir)release\PlayerEncumbranceBar\SPT\BepInEx\plugins\PlayerEncumbranceBar"
+      DestinationFolder="$(ProjectDir)release\PlayerEncumbranceBar\BepInEx\plugins\PlayerEncumbranceBar"
     />
     <ZipDirectory
       SourceDirectory="$(ProjectDir)release\PlayerEncumbranceBar\"
